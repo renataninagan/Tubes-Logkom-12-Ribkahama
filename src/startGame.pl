@@ -1,5 +1,7 @@
 :- include('factsRules.pl').
-:- dynamic(game_status/3).   
+:- include('mekanismeDasar.pl').
+:- dynamic(gameStatus/3).   
+:- dynamic(isStart/1).  
 
 adaDiDeck(H, [H|_]).
 adaDiDeck(H, [_|T]) :- adaDiDeck(H, T).
@@ -17,18 +19,18 @@ shuffleKartu(Deck, [H|T]) :-
     select(H, Deck, Sisa),
     shuffleKartu(Sisa, T).
 
-ambilNKartu(0, Pile, [], Pile) :- !.
-ambilNKartu(N, [H|T], [H|Kartu], Sisa) :-
+awalBagiKartu(0, Pile, [], Pile) :- !.
+awalBagiKartu(N, [H|T], [H|Kartu], Sisa) :-
     N > 0,
     N1 is N - 1,
-    ambilNKartu(N1, T, Kartu, Sisa).
+    awalBagiKartu(N1, T, Kartu, Sisa).
 
 bagikanKartu([], DrawPile, [], DrawPile).
 bagikanKartu([player(Nama, Status, [])|T], DrawPile,
-             [player(Nama, Status, Tangan)|ListBaru], DrawPileBaru) :-
-    write('Membagikan ke '), write(Nama), nl,         % debug
-    ambilNKartu(7, DrawPile, Tangan, DrawPileSisa),
-    write('Tangan '), write(Nama), write(': '), write(Tangan), nl, % debug
+             [player(Nama, Status, KartuDiTangan)|ListBaru], DrawPileBaru) :-
+    write('Membagikan ke '), write(Nama), nl,
+    awalBagiKartu(7, DrawPile, KartuDiTangan, DrawPileSisa),
+    write('kartuDiTangan '), write(Nama), write(': '), write(KartuDiTangan), nl,
     bagikanKartu(T, DrawPileSisa, ListBaru, DrawPileBaru).
 
 verifikasiJumlahPemain(X, 1) :- X >= 2, X =< 4.
@@ -47,12 +49,10 @@ jumlahPemain(X) :-
     jumlahPemain(X).
 
 isUniquePemain(_, [], 1).
+isUniquePemain(Nama, [player(Nama,_,_)|_], 0) :- !.
 isUniquePemain(Nama, [player(H,_,_)|T], X) :-
     Nama \== H,
-    isUniquePemain(Nama, T, Y),
-    X is 1, !.
-isUniquePemain(Nama, [player(H,_,_)|T], X) :-
-    X is 0.
+    isUniquePemain(Nama, T, X).
 
 loopInputNama(0, L, L) :- !.
 loopInputNama(N, L, PlayerFinal) :-
@@ -64,23 +64,25 @@ loopInputNama(N, L, PlayerFinal) :-
         write('Nama sudah digunakan! Silakan input ulang.'), nl, loopInputNama(N, L, PlayerFinal)).
     
 inisialisasiGame :-
+    \+ (isStart(true)),!,
     jumlahPemain(N),
     loopInputNama(N, [], ListPlayer),
-    deckLengkap(DeckMentah),
-    shuffleKartu(DeckMentah, DrawPileAwal),
+    deckLengkap(DeckAwal),
+    shuffleKartu(DeckAwal, DrawPileAwal),
     bagikanKartu(ListPlayer, DrawPileAwal, ListTerisi, DrawPileSisa),
     DrawPileSisa = [KartuPertama|DrawPileFinal],
     DiscardPile = [KartuPertama],
-    retractall(game_status(_, _, _)),
-    asserta(game_status(ListTerisi, DiscardPile, DrawPileFinal)),  
+    retractall(gameStatus(_, _, _)),
+    asserta(gameStatus(ListTerisi, DiscardPile, DrawPileFinal)),
     write('Game siap!'), nl,
+    ( ListTerisi = [player(GiliranNow,_,_)|_] -> true ; GiliranNow = 'nullllll' ),
+    asserta(isStart(true)),
     tampilStatus.
 
 cekStatus(player(_, menang, []), menang) :- !.
 cekStatus(player(_, kalah,  _), kalah)  :- !.
-cekStatus(player(_, main,  []), menang).   % deck habis → menang
+cekStatus(player(_, main,  []), menang).  
 cekStatus(player(_, main,   _), main).
-
 
 updateStatusList([], []).
 updateStatusList([H|T], [player(Nama, StatusBaru, Deck)|T2]) :-
@@ -88,14 +90,12 @@ updateStatusList([H|T], [player(Nama, StatusBaru, Deck)|T2]) :-
     cekStatus(H, StatusBaru),
     updateStatusList(T, T2).
 
-
 listPemainAktif([], []).
 listPemainAktif([H|T], [H|L]) :-
     H = player(_, main, _), !,
     listPemainAktif(T, L).
 listPemainAktif([_|T], L) :-
     listPemainAktif(T, L).
-
 
 listPemenang([], []).
 listPemenang([H|T], [H|L]) :-
@@ -105,13 +105,16 @@ listPemenang([_|T], L) :-
     listPemenang(T, L).
 
 updateGame(ListPlayer, DiscardPile, DrawPile) :-
-    retractall(game_status(_, _, _)),
-    asserta(game_status(ListPlayer, DiscardPile, DrawPile)).
+    retractall(gameStatus(_, _, _)),
+    asserta(gameStatus(ListPlayer, DiscardPile, DrawPile)).
 
 tampilStatus :-
-    game_status(ListPlayer, DiscardPile, DrawPile),
-    write('=== GAME STATUS ==='), nl,
-    write('Kartu teratas discard : '), write(DiscardPile), nl,
+    nl, write('=== STATUS TERKINI ==='), nl,
+    gameStatus(ListPlayer, DiscardPile, DrawPile),
+    ListPlayer = [player(Nama, StatusBaru, Deck)|SisaPemain],
+    write('Turn sekarang         : '), write(Nama), nl,
+    DiscardPile = [Teratas|Sisa],
+    write('Kartu teratas discard : '), write(Teratas), nl,
     length(DrawPile, JmlDraw),
     write('Sisa DrawPile         : '), write(JmlDraw), write(' kartu'), nl,
     write('Pemain                :'), nl,
@@ -119,8 +122,8 @@ tampilStatus :-
 
 tampilListPlayer([]).
 tampilListPlayer([player(Nama, Status, Deck)|T]) :-
-    length(Deck, JmlKartu),
-    write('  - '), write(Nama),
-    write(' | status: '), write(Status),
-    write(' | kartu: '), write(Deck), nl,
+    write('-  '), write(Nama),
+    length(Deck, JmlKartu),nl,
+    write('Status               : '), write(Status),nl,
+    write('Sisa Kartu di Tangan : '), write(Deck), nl,
     tampilListPlayer(T).
