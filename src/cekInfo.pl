@@ -1,7 +1,9 @@
-tulisPemain(Urutan, JumlahPemain,, [NamaTerakhir]) :-
+/* Basis untuk tulisPemain */
+tulisPemain(Urutan, JumlahPemain,, []) :-
     Urutan > JumlahPemain,
     !.
 
+/* Rekurens tulisPemain */
 tulisPemain(Urutan, JumlahPemain, [Nama | SisaNama]) :-
     write('Nama pemain'), write(Urutan), write(': '), write(Nama), nl,
     player(Nama, DaftarKartu),
@@ -10,8 +12,16 @@ tulisPemain(Urutan, JumlahPemain, [Nama | SisaNama]) :-
     NextUrutan is Urutan + 1,
     tulisPemain(NextUrutan, JumlahPemain, SisaNama).
 
+/* Basis untuk tulisListUrutan */
+tulisListUrutan([NamaTerakhir]) :-
+    write(NamaTerakhir), write('.'), nl, !.
 
-cek_info :-
+/* Rekurens tulisListUrutan */ 
+tulisListUrutan([Nama | Sisa]) :-
+    write(Nama), write(' - '),
+    tulisListUrutan(Sisa). 
+
+cekInfo :-
     urutanPemain(ListUrutan),
     jumlahPemain(JumlahPemain), 
     write('Kartu discard top: '), write(kartu_angka(H)), nl, nl,
