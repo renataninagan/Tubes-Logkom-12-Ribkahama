@@ -1,3 +1,5 @@
+:-include(startGame.pl).
+
 /* Basis untuk tulisPemain */
 tulisPemain(Urutan, JumlahPemain,, []) :-
     Urutan > JumlahPemain,
@@ -22,9 +24,8 @@ tulisListUrutan([Nama | Sisa]) :-
     tulisListUrutan(Sisa). 
 
 cekInfo :-
-    urutanPemain(ListUrutan),
-    jumlahPemain(JumlahPemain), 
-    write('Kartu discard top: '), write(kartu_angka(H)), nl, nl,
+    game_status(ListPlayer, DiscardPile, DrawPile),
+    write('Kartu discard top: '), write(DiscardPile), nl, nl,
     write('Urutan pemain: '), 
-    tulisListUrutan(ListUrutan), nl,
+    tampilListPlayer(ListPlayer), nl,
     tulisPemain(1, JumlahPemain, ListUrutan).
