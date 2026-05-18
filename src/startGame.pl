@@ -1,5 +1,9 @@
 :- include('factsRules.pl').
+:- include('cekInfo.pl').
 :- include('mekanismeDasar.pl').
+:- include('lihatKartu.pl').
+:- include('lihatCommand.pl').
+:- include('primitif.pl').
 :- dynamic(gameStatus/3).   
 :- dynamic(isStart/1).  
 
@@ -13,9 +17,9 @@ ambilDeck(A, A).
 
 shuffleKartu([], []).
 shuffleKartu(Deck, [H|T]) :-
-    length(Deck, Len),
+    getLen(Deck, Len),
     random(0, Len, Idx),
-    nth0(Idx, Deck, H),
+    getIdx0(Deck, Idx, H),
     select(H, Deck, Sisa),
     shuffleKartu(Sisa, T).
 
@@ -28,9 +32,7 @@ awalBagiKartu(N, [H|T], [H|Kartu], Sisa) :-
 bagikanKartu([], DrawPile, [], DrawPile).
 bagikanKartu([player(Nama, Status, [])|T], DrawPile,
              [player(Nama, Status, KartuDiTangan)|ListBaru], DrawPileBaru) :-
-    write('Membagikan ke '), write(Nama), nl,
     awalBagiKartu(7, DrawPile, KartuDiTangan, DrawPileSisa),
-    write('kartuDiTangan '), write(Nama), write(': '), write(KartuDiTangan), nl,
     bagikanKartu(T, DrawPileSisa, ListBaru, DrawPileBaru).
 
 verifikasiJumlahPemain(X, 1) :- X >= 2, X =< 4.
@@ -45,7 +47,7 @@ jumlahPemain(X) :-
     X is Jumlah, !.
 
 jumlahPemain(X) :-
-    write('Jumlah pemain tidak valid. Silakan input ulang.'), nl,
+    write('Jumlah pemain harus diantara 2-4 orang! Silakan input ulang.'), nl,
     jumlahPemain(X).
 
 isUniquePemain(_, [], 1).
@@ -54,30 +56,37 @@ isUniquePemain(Nama, [player(H,_,_)|T], X) :-
     Nama \== H,
     isUniquePemain(Nama, T, X).
 
-loopInputNama(0, L, L) :- !.
-loopInputNama(N, L, PlayerFinal) :-
+loopInputNama(0, L, L, _) :- !.
+loopInputNama(N, L, PlayerFinal, K) :-
     N > 0,
-    write('Masukkan nama pemain: '),
+    K1 is K+1,
+    write('Masukkan nama pemain '), write(K), write(' : '),
     read(Nama),
     isUniquePemain(Nama, L, X),
-    ( X == 1 ->  N1 is N - 1, append(L, [player(Nama, main, [])], L1), loopInputNama(N1, L1, PlayerFinal);
-        write('Nama sudah digunakan! Silakan input ulang.'), nl, loopInputNama(N, L, PlayerFinal)).
+    ( X == 1 ->  N1 is N - 1, append(L, [player(Nama, main, [])], L1), loopInputNama(N1, L1, PlayerFinal, K1);
+        write('Nama sudah digunakan! Silakan input ulang.'), nl, loopInputNama(N, L, PlayerFinal, K)).
     
+printInputNama([player(T,_,_)]) :- write(T), !. 
+printInputNama([player(H,_,_)|T]) :- write(H), write('-'), printInputNama(T).
+
 inisialisasiGame :-
     \+ (isStart(true)),!,
     jumlahPemain(N),
-    loopInputNama(N, [], ListPlayer),
+    loopInputNama(N, [], ListPlayer, 1),
+    nl, write('Urutan pemain : '), printInputNama(ListPlayer), nl,
     deckLengkap(DeckAwal),
     shuffleKartu(DeckAwal, DrawPileAwal),
     bagikanKartu(ListPlayer, DrawPileAwal, ListTerisi, DrawPileSisa),
     DrawPileSisa = [KartuPertama|DrawPileFinal],
     DiscardPile = [KartuPertama],
+    KartuPertama = kartu(W,J),
+    nl, write('Setiap pemain mendapat 7 kartu acak'),nl,
+    nl, write('Kartu Discard Top : '),write(W) ,write('-'), write(J), nl,
     retractall(gameStatus(_, _, _)),
     asserta(gameStatus(ListTerisi, DiscardPile, DrawPileFinal)),
-    write('Game siap!'), nl,
     ( ListTerisi = [player(GiliranNow,_,_)|_] -> true ; GiliranNow = 'nullllll' ),
-    asserta(isStart(true)),
-    tampilStatus.
+    nl, write('Giliran '),write(GiliranNow), nl,
+    asserta(isStart(true)).
 
 cekStatus(player(_, menang, []), menang) :- !.
 cekStatus(player(_, kalah,  _), kalah)  :- !.
@@ -107,23 +116,3 @@ listPemenang([_|T], L) :-
 updateGame(ListPlayer, DiscardPile, DrawPile) :-
     retractall(gameStatus(_, _, _)),
     asserta(gameStatus(ListPlayer, DiscardPile, DrawPile)).
-
-tampilStatus :-
-    nl, write('=== STATUS TERKINI ==='), nl,
-    gameStatus(ListPlayer, DiscardPile, DrawPile),
-    ListPlayer = [player(Nama, StatusBaru, Deck)|SisaPemain],
-    write('Turn sekarang         : '), write(Nama), nl,
-    DiscardPile = [Teratas|Sisa],
-    write('Kartu teratas discard : '), write(Teratas), nl,
-    length(DrawPile, JmlDraw),
-    write('Sisa DrawPile         : '), write(JmlDraw), write(' kartu'), nl,
-    write('Pemain                :'), nl,
-    tampilListPlayer(ListPlayer).
-
-tampilListPlayer([]).
-tampilListPlayer([player(Nama, Status, Deck)|T]) :-
-    write('-  '), write(Nama),
-    length(Deck, JmlKartu),nl,
-    write('Status               : '), write(Status),nl,
-    write('Sisa Kartu di Tangan : '), write(Deck), nl,
-    tampilListPlayer(T).

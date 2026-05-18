@@ -1,5 +1,5 @@
 /* Basis untuk tulisPemain */
-tulisPemain(Urutan, JumlahPemain,, []) :-
+tulisPemain(Urutan, JumlahPemain,_) :-
     Urutan > JumlahPemain,
     !.
 
@@ -7,7 +7,7 @@ tulisPemain(Urutan, JumlahPemain,, []) :-
 tulisPemain(Urutan, JumlahPemain, [Nama | SisaNama]) :-
     write('Nama pemain'), write(Urutan), write(': '), write(Nama), nl,
     player(Nama, DaftarKartu),
-    length(DaftarKartu, X),
+    getLen(DaftarKartu, X),
     write('Jumlah kartu : '), write(X), nl, nl,
     NextUrutan is Urutan + 1,
     tulisPemain(NextUrutan, JumlahPemain, SisaNama).
@@ -22,8 +22,20 @@ tulisListUrutan([Nama | Sisa]) :-
     tulisListUrutan(Sisa). 
 
 cekInfo :-
+    nl,
     gameStatus(ListPlayer, DiscardPile, DrawPile),
-    write('Kartu discard top: '), write(DiscardPile), nl, nl,
-    write('Urutan pemain: '), 
+    DiscardPile = [kartu(W,J)|_],
+    nl, write('=== STATUS TERKINI ==='), nl,
+    ListPlayer = [player(Nama, StatusBaru, Deck)|SisaPemain],
+    write('Kartu discard top    : '), write(W), write('-'), write(J),nl, nl,
+    write('Urutan pemain        : '), nl,
     tampilListPlayer(ListPlayer), nl,
-    tulisPemain(1, JumlahPemain, ListUrutan).
+    write('Giliran '), write(Nama), nl.
+
+tampilListPlayer([]).
+tampilListPlayer([player(Nama, Status, Deck)|T]) :-
+    write('-  '), write(Nama),
+    getLen(Deck, JmlKartu),nl,
+    write('Status                 : '), write(Status),nl,
+    write('Jumlah Kartu di Tangan : '), write(JmlKartu), nl,
+    tampilListPlayer(T).

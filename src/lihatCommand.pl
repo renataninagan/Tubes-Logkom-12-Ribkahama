@@ -1,30 +1,13 @@
-% menampilkan command yang bisa dipilih pemain
-/* belum pakai state definisi conditional
- state pemain, (pasti) akan direvisi/ditambahkan
-lagi setelah diskusi lebih lanjut */
+:- include('mekanismeDasar.pl').
 
 lihatCommand :-
-    nl,
-    write('Aksi utama yang tersedia:'), nl,
-    (
-        bisaMainKartu ->
-        write('1. mainKartu'), nl
-    ;
-        true
-    ),
-    (
-        bisaAmbilKartu ->
-        write('2. ambilKartu'), nl
-    ;
-        true
-    ),
-    (
-        bisaTantang ->
-        write('3. tantang'), nl
-    ;
-        true
-    ),
-
+    gameStatus(ListPlayer, DiscardPile, DrawPile),
+    ListPlayer = [player(_,Status,Deck)|_],
+    DiscardPil = [KartuTerakhir|_],
+    write('Aksi utama yang tersedia :'), nl,
+    (Status == 'main' -> write('1. mainKartu'), nl; true),
+    ((\+ adaKartu(Deck, KartuTerakhir)) -> write('2. ambilKartu'), nl; true),
+    % (bisaTantang -> write('3. tantang'), nl; true),
     nl,
     write('Aksi pendukung yang tersedia'), nl,
     write('1. lihatCommand'), nl,

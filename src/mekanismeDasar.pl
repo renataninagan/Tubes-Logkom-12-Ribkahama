@@ -1,19 +1,8 @@
-randomizeIdx(I,N,X) :- random(I, N, X).
-
-getCard([H|_],1,H).
-getCard([_|T],I,H) :-
-    I > 1,
-    I1 is I-1,
-    getCard(T, I1, H).
-
-removeCard([_|T], 1, T).
-removeCard([H|T], I, [H|UT]) :-
-    I > 1,
-    I1 is I-1,
-    removeCard(T, I1, UT).
+:- include('cekInfo.pl').
+:- include('primitif.pl').
 
 pindahGiliran([Pemain|SisaPemain], ListPemainNow) :-
-    append(SisaPemain, [Pemain], ListPemainNow).
+    appendElem(SisaPemain, [Pemain], ListPemainNow).
 
 adaKartu(Deck, kartu(Warna, Jenis)) :-
     member(kartu(W, J), Deck),
@@ -22,17 +11,17 @@ adaKartu(Deck, kartu(Warna, Jenis)) :-
 drawKartu(0, DrawPile, Deck, DrawPile, Deck) :- !.
 drawKartu(N, [KartuAtas|SisaDraw], Deck, DrawPileSisa, DeckSisa) :-
     N > 0,
-    append(Deck, [KartuAtas], DeckNow),
+    appendElem(Deck, [KartuAtas], DeckNow),
     N1 is N - 1,
     drawKartu(N1, SisaDraw, DeckNow, DrawPileSisa, DeckSisa).
 
 akhiriGiliran(Nama, Status, DeckNow, SisaPemain, Discard, DrawPileNow) :-
     PemainNow = player(Nama, Status, DeckNow),
-    append(SisaPemain, [PemainNow], ListPemainNow),
+    appendElem(SisaPemain, [PemainNow], ListPemainNow),
     retractall(gameStatus(_, _, _)),
     asserta(gameStatus(ListPemainNow, Discard, DrawPileNow)),
     (StatusNow == menang -> format('~w Menang!~n', [Nama]) ; true),
-    tampilStatus.
+    cekInfo.
 
 ambilKartu :-
     gameStatus([player(Nama, Status, Deck)|SisaPemain], Discard, DrawPile),!,
@@ -58,13 +47,13 @@ kartuCocok(Nama, Status, Deck, N, Played, SisaPemain, KartuTerakhir, SisaDiscard
     removeCard(Deck, N, DeckNow),
     (DeckNow == [] -> StatusNow = menang ; StatusNow = Status),
     
-    format('~w mengeluarkan kartu: ~w ~w~n', [Nama, WarnaPilih, JenisPilih]),
+    format('~w mengeluarkan kartu : ~w ~w~n', [Nama, WarnaPilih, JenisPilih]),
     (JenisPilih == drawtwo ->  SisaPemain = [player(NamaNext, StatusNext, DeckNext)|SisaLain],
         drawKartu(2, DrawPile, DeckNext, DrawPileNow, DeckNextNow), 
         PemainNext = player(NamaNext, StatusNext, DeckNextNow),
-        append(SisaLain, [PemainNext], SisaPemainEfek),
+        appendElem(SisaLain, [PemainNext], SisaPemainEfek),
         format('~w mengambil 2 kartu dari draw pile akibat drawtwo card!~n', [NamaNext]);   
-    JenisPilih == rev -> reverse(SisaPemain, SisaPemainEfek),
+    JenisPilih == rev -> reverseL(SisaPemain, SisaPemainEfek),
         DrawPileNow = DrawPile,
         write('Urutan giliran dibalik!'), nl;   
         SisaPemainEfek = SisaPemain,
