@@ -1,11 +1,12 @@
 % menampilkan kartu pemain
 
-lihatKartu(ListKartu) :-
+lihatKartu :-
+    gameStatus([player(_,_,ListKartu)|_], DiscardPile, DrawPile),
     tampilkanKartu(ListKartu, 1).
 
 tampilkanKartu([], _).
 
-tampilkanKartu([Kartu | Rest], No) :-
+tampilkanKartu([kartu(Warna, Jenis) | Rest], No) :-
     write(No),
     write('. '),
     write(Warna),

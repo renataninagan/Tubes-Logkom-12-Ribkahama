@@ -1,10 +1,12 @@
-:- include('startGame.pl ').
+:- include('startGame.pl').
+:- include('lihatKartu.pl').
+:- include('lihatCommand.pl').
  
-startgame :-
+startGame :-
     nl,
-    write('==============================='), nl,
-    write('  Selamat datang di Permainan UNI!'), nl,
-    write('==============================='), nl,
+    write('===================================='), nl,
+    write('  Selamat datang di Permainan UNI!  '), nl,
+    write('===================================='), nl,
     nl,
     write('Aturan :'), nl,
     write('  - Cocokkan warna atau angka kartu teratas'), nl,
@@ -13,6 +15,5 @@ startgame :-
     write('  - Jika DrawPile habis dan tidak bisa main, KALAH'), nl,
     nl,
     inisialisasiGame,
-    nl,
-    write('--- Mulai bermain ---'), nl.
+    nl.
  
