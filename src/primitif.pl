@@ -32,3 +32,9 @@ reverseL(List, Reversed) :-
 reverseH([], Accumulator, Accumulator).
 reverseH([Head|Tail], Accumulator, Reversed) :-
     reverseH(Tail, [Head|Accumulator], Reversed).
+    
+pemainTerakhir([X], X).
+pemainTerakhir([_|T], X) :- pemainTerakhir(T, X).
+
+cutLastElem([_], []).
+cutLastElem([H|T], [H|R]) :- cutLastElem(T, R).

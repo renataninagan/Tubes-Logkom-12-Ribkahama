@@ -26,16 +26,17 @@ cekInfo :-
     gameStatus(ListPlayer, DiscardPile, DrawPile),
     DiscardPile = [kartu(W,J)|_],
     nl, write('=== STATUS TERKINI ==='), nl,
-    ListPlayer = [player(Nama, StatusBaru, Deck)|SisaPemain],
+    ListPlayer = [player(Nama, _, _)|_],
     write('Kartu discard top    : '), write(W), write('-'), write(J),nl, nl,
     write('Urutan pemain        : '), nl,
     tampilListPlayer(ListPlayer), nl,
     write('Giliran '), write(Nama), nl.
 
-tampilListPlayer([]).
+tampilListPlayer([]) :- !.
 tampilListPlayer([player(Nama, Status, Deck)|T]) :-
-    write('-  '), write(Nama),
-    getLen(Deck, JmlKartu),nl,
-    write('Status                 : '), write(Status),nl,
-    write('Jumlah Kartu di Tangan : '), write(JmlKartu), nl,
+    write('- '), write(Nama), nl,
+    write('Status                 : '), write(Status), nl,
+    getLen(Deck, JmlKartu),
+    !,
+    write('Jumlah Kartu di Tangan : '), write(JmlKartu), nl, nl,
     tampilListPlayer(T).
