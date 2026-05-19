@@ -1,3 +1,5 @@
+:- include('primitif.pl').
+
 /* Basis untuk tulisPemain */
 tulisPemain(Urutan, JumlahPemain,_) :-
     Urutan > JumlahPemain,
@@ -37,6 +39,6 @@ tampilListPlayer([player(Nama, Status, Deck)|T]) :-
     write('- '), write(Nama), nl,
     write('Status                 : '), write(Status), nl,
     getLen(Deck, JmlKartu),
-    !,
     write('Jumlah Kartu di Tangan : '), write(JmlKartu), nl, nl,
+    !,
     tampilListPlayer(T).

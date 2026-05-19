@@ -11,17 +11,19 @@ adaKartu(Deck, kartu(Warna, Jenis)) :-
 drawKartu(0, DrawPile, Deck, DrawPile, Deck) :- !.
 drawKartu(N, [KartuAtas|SisaDraw], Deck, DrawPileSisa, DeckSisa) :-
     N > 0,
-    appendElem(Deck, [KartuAtas], DeckNow),
+    appendElem(Deck, KartuAtas, DeckNow),
     N1 is N - 1,
     drawKartu(N1, SisaDraw, DeckNow, DrawPileSisa, DeckSisa).
 
 akhiriGiliran(Nama, StatusNow, DeckNow, SisaPemain, Discard, DrawPileNow) :-
     PemainNow = player(Nama, StatusNow, DeckNow),
-    appendElem(SisaPemain, [PemainNow], ListPemainNow),
+    appendElem(SisaPemain, PemainNow, ListPemainNow),
     retractall(gameStatus(_, _, _)),
     asserta(gameStatus(ListPemainNow, Discard, DrawPileNow)),
     (StatusNow == menang -> format('~w Menang!~n', [Nama]) ; true),
+    format('DEBUG: ~w~n', [ListPemainNow]),
     cekInfo,
+    
     !.
 
 ambilKartu :-
@@ -54,7 +56,7 @@ mainkanKartu(N) :-
     ),
 
     getCard(Deck, N, Played),
-    Played  = kartu(WarnaPilih, JenisPilih),
+    Played = kartu(WarnaPilih, JenisPilih),
 
     (
         WarnaPilih == hitam,
@@ -89,6 +91,7 @@ mainkanKartu(N) :-
         kartuTidakCocok(Nama, Deck, KartuTerakhir),
         !
     ).
+
 kartuCocok(Nama, Status, Deck, N, Played, SisaPemain, KartuTerakhir, SisaDiscard, DrawPile) :-
     Played = kartu(WarnaPilih, JenisPilih),
 
@@ -101,7 +104,7 @@ kartuCocok(Nama, Status, Deck, N, Played, SisaPemain, KartuTerakhir, SisaDiscard
         SisaPemain = [player(NamaNext, StatusNext, DeckNext)|SisaLain],
         drawKartu(2, DrawPile, DeckNext, DrawPileNow, DeckNextNow),
         PemainNext = player(NamaNext, StatusNext, DeckNextNow),
-        appendElem(SisaLain, [PemainNext], SisaPemainEfek),
+        SisaPemainEfek = [PemainNext|SisaLain],
         DiscardNow = [Played, KartuTerakhir | SisaDiscard],
         format('~w mengambil 2 kartu dari draw pile akibat drawtwo card!~n', [NamaNext])
 
@@ -135,7 +138,7 @@ kartuCocok(Nama, Status, Deck, N, Played, SisaPemain, KartuTerakhir, SisaDiscard
         drawKartu(4, DrawPile, DeckNext, DrawPileNow, DeckNextNow),
 
         PemainNext = player(NamaNext, StatusNext, DeckNextNow),
-        appendElem(SisaLain, [PemainNext], SisaPemainEfek),
+        SisaPemainEfek = [PemainNext|SisaLain],
 
         PlayedNow = kartu(WarnaBaru, wilddrawfour),
         DiscardNow = [PlayedNow, KartuTerakhir | SisaDiscard],
@@ -165,9 +168,9 @@ kartuTidakCocok(Nama, Deck, KartuTerakhir) :-
     ).
 
 tantang :-
-    gameStatus([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain], 
+    gameStatus([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain],
     [KartuTerakhir|SisaDiscard], DrawPile),
-    
+
     (KartuTerakhir = kartu(_, wilddrawfour) ->
         true
     ;
@@ -176,9 +179,9 @@ tantang :-
 
     write('Tantangan dilakukan!'), nl,
 
-    pemainTerakhir([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain], 
+    pemainTerakhir([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain],
              player(NamaPelaku, StatusPelaku, DeckPelaku)),
-    
+
     format('Memeriksa kartu ~w...~n', [NamaPelaku]),
 
     (SisaDiscard = [KartuSebelum|_] ->
@@ -191,7 +194,7 @@ tantang :-
         write('Tantangan berhasil!'), nl,
         format('~w mendapatkan 4 kartu akibat ketahuan curang.~n', [NamaPelaku]),
 
-        cutLastElem([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain], 
+        cutLastElem([player(NamaTantang, StatusTantang, DeckTantang)|SisaPemain],
                    SisaTanpaPelaku),
         drawKartu(4, DrawPile, DeckPelaku, DrawPileNow, DeckPelakuNow),
         PelakuNow = player(NamaPelaku, StatusPelaku, DeckPelakuNow),
