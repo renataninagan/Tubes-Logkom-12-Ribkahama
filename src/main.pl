@@ -1,6 +1,12 @@
+:- initialization(randomize).
+:- include('factsRules.pl').
+:- include('primitif.pl').
+:- include('cekInfo.pl').
+:- include('mekanismeDasar.pl').
 :- include('startGame.pl').
 :- include('lihatKartu.pl').
 :- include('lihatCommand.pl').
+
  
 startGame :-
     nl,

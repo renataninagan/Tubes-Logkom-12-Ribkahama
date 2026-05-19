@@ -1,9 +1,3 @@
-:- include('factsRules.pl').
-:- include('cekInfo.pl').
-:- include('mekanismeDasar.pl').
-:- include('lihatKartu.pl').
-:- include('lihatCommand.pl').
-:- include('primitif.pl').
 :- dynamic(gameStatus/3).   
 :- dynamic(isStart/1).  
 :- dynamic(statusUNI/1).
@@ -71,7 +65,9 @@ printInputNama([player(T,_,_)]) :- write(T), !.
 printInputNama([player(H,_,_)|T]) :- write(H), write('-'), printInputNama(T).
 
 inisialisasiGame :-
-    \+ (isStart(true)),!,
+    retractall(isStart(_)),
+    retractall(gameStatus(_, _, _)),
+    retractall(statusUNI(_)),
     jumlahPemain(N),
     loopInputNama(N, [], ListPlayer, 1),
     nl, write('Urutan pemain : '), printInputNama(ListPlayer), nl,
