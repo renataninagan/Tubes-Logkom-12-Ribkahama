@@ -17,13 +17,17 @@ drawKartu(N, [KartuAtas|SisaDraw], Deck, DrawPileSisa, DeckSisa) :-
 
 akhiriGiliran(Nama, StatusNow, DeckNow, SisaPemain, Discard, DrawPileNow) :-
     PemainNow = player(Nama, StatusNow, DeckNow),
-    appendElem(SisaPemain, PemainNow, ListPemainNow),
+    appendElem(SisaPemain, [PemainNow], ListPemainNow),
     retractall(gameStatus(_, _, _)),
     asserta(gameStatus(ListPemainNow, Discard, DrawPileNow)),
-    (StatusNow == menang -> format('~w Menang!~n', [Nama]) ; true),
-    format('DEBUG: ~w~n', [ListPemainNow]),
-    cekInfo,
-    
+    (
+        StatusNow == menang ->
+        format('~w Menang!~n', [Nama]),
+        endGame
+    ;
+        cekInfo
+    ),
+
     !.
 
 ambilKartu :-
