@@ -6,6 +6,7 @@
 :- include('primitif.pl').
 :- dynamic(gameStatus/3).   
 :- dynamic(isStart/1).  
+:- dynamic(statusUNI/1).
 
 adaDiDeck(H, [H|_]).
 adaDiDeck(H, [_|T]) :- adaDiDeck(H, T).
@@ -99,12 +100,65 @@ updateStatusList([H|T], [player(Nama, StatusBaru, Deck)|T2]) :-
     cekStatus(H, StatusBaru),
     updateStatusList(T, T2).
 
+updatePemainList(_, [], _, []).
+updatePemainList(NamaTarget, [player(NamaTarget, Status, _)|T], DeckBaru, [player(NamaTarget, Status, DeckBaru)|T]) :- !.
+updatePemainList(NamaTarget, [H|T], DeckBaru, [H|TBaru]) :-
+    updatePemainList(NamaTarget, T, DeckBaru, TBaru).
+
 listPemainAktif([], []).
 listPemainAktif([H|T], [H|L]) :-
     H = player(_, main, _), !,
     listPemainAktif(T, L).
 listPemainAktif([_|T], L) :-
     listPemainAktif(T, L).
+
+bisaUni(NamaPemain) :- 
+    gameStatus([player(NamaPemain, _, Deck) | _], _, _),
+    getLen(Deck, 2).
+     
+
+uni(IndeksKartu) :-
+    gameStatus([player(Nama, Status, Deck) | SisaPemain], Discard, DrawPile),
+    ( bisaUni(Nama) ->
+        retractall(statusUNI(Nama)),
+        asserta(statusUNI(Nama)),
+        format('~w menyerukan UNI!~n', [Nama]),
+        mainkanKartu(IndeksKartu)
+    ;   
+        format('~w gagal menyerukan UNI!~n', [NamaPemain]),
+        format('~w mendapatkan 1 kartu penalti.~n', [NamaPemain]),
+
+        drawKartu(1, DrawPile, Deck, DrawPileNow, DeckNow),
+
+        retractall(gameStatus(_, _, _)),
+        asserta(gameStatus([player(Nama, Status, DeckNow) | SisaPemain], Discard, DrawPileNow))
+    ).
+
+tangkap(NamaPemain) :-
+    gameStatus([player(Pemanggil, StatusPemanggil, DeckPemanggil)|SisaPemain], Discard, DrawPile),
+    
+    ( member(player(NamaPemain, _, DeckTarget), [player(Pemanggil, StatusPemanggil, DeckPemanggil)|SisaPemain]) ->
+        length(DeckTarget, SisaKartu),
+        ( (SisaKartu =:= 1, \+ statusUNI(NamaPemain)) ->
+            format('~w tertangkap tidak menyerukan UNI.~n', [NamaPemain]),
+            format('~w mendapatkan 2 kartu penalti.~n', [NamaPemain]),
+            
+            drawKartu(2, DrawPile, DeckTarget, DrawPileNow, DeckTargetNow),
+            
+            updatePemainList(NamaPemain, SisaPemain, DeckTargetNow, SisaPemainNow),
+            akhiriGiliran(Pemanggil, StatusPemanggil, DeckPemanggil, SisaPemainNow, Discard, DrawPileNow)
+            
+        ;
+            format('Tuduhan salah! ~w tidak melanggar aturan.~n', [NamaPemain]),
+            format('~w mendapatkan 1 kartu penalti.~n', [Pemanggil]),
+            
+            drawKartu(1, DrawPile, DeckPemanggil, DrawPileNow, DeckPemanggilNow),
+            
+            retractall(gameStatus(_, _, _)),
+            asserta(gameStatus([player(Pemanggil, StatusPemanggil, DeckPemanggilNow)|SisaPemain], Discard, DrawPileNow)),
+            akhiriGiliran(Pemanggil, StatusPemanggil, DeckPemanggil, SisaPemain, Discard, DrawPileNow)
+        )
+    ).
 
 listPemenang([], []).
 listPemenang([H|T], [H|L]) :-
